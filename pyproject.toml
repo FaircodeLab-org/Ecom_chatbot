@@ -1,20 +1,29 @@
-[project]
-name = "ebot"
-authors = [
-    { name = "vinay", email = "reddysrivinayofficial@gmail.com"}
-]
-description = "Ebot"
-requires-python = ">=3.10"
-readme = "README.md"
-dynamic = ["version"]
-dependencies = [
-    # "frappe~=15.0.0" # Installed and managed by bench.
-]
+# File: ~/frappe-bench/apps/ebot/pyproject.toml
 
 [build-system]
-requires = ["flit_core >=3.4,<4"]
+requires = ["flit_core >=2,<4"]
 build-backend = "flit_core.buildapi"
 
-# These dependencies are only installed when developer mode is enabled
-[tool.bench.dev-dependencies]
-# package_name = "~=1.1.0"
+[project]
+name = "ebot"
+version = "0.0.1"
+description = "Ebot"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+authors = [
+    {name = "vinay", email = "reddysrivinayofficial@gmail.com"}
+]
+
+dependencies = [
+    "frappe>=15.0.0",
+    "openai==0.27.8",
+    "numpy",
+    "requests",
+    "Pillow"
+]
+
+[tool.frappe]
+app_name = "ebot"
+version = "0.0.1"
