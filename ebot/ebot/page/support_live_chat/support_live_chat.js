@@ -10,6 +10,7 @@ frappe.pages['support_live_chat'].on_page_load = function (wrapper) {
     $(frappe.render_template("support_live_chat", {})).appendTo(page.main);
     console.log("support_live_chat.js loaded.");
 
+   
     // Retrieve the session ID from the route; if missing, prompt the support agent.
     // DO NOT auto-generate a new session here – the agent must input the session ID from the chatbot.
     var routeParts = frappe.get_route();

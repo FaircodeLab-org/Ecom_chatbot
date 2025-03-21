@@ -334,7 +334,7 @@
 }
 
 /* Mobile Responsiveness */
-@media screen and (max-width: 480px) {
+/* @media screen and (max-width: 480px) {
     .chatbot-container {
         width: 90%;
         right: 5%;
@@ -346,5 +346,38 @@
     }
     .input-container button {
         margin: 0 3px;
+    }
+} */
+
+/* MOBILE OVERRIDES FOR MINIMIZED STATE */
+@media screen and (max-width: 480px) {
+
+    /* Increase the minimized container height so the header and a portion of the widget remain visible */
+    .chatbot-container.minimized {
+        max-height: 150px; /* increased from 72px – adjust as needed */
+        /* transition: max-height 0.3s ease-in-out; */
+    }
+
+    /* Ensure that in minimized mode the chat window and input remain block-level (or visible) */
+    .chatbot-container.minimized #chat-window,
+    .chatbot-container.minimized .input-container {
+        display: block; /* previously these were set to display: none */
+    }
+
+    /* Optionally, reduce the chat window padding in minimized mode */
+    .chatbot-container.minimized #chat-window {
+        padding: 5px 10px;
+        max-height: 80px; /* adjust to show a few lines only */
+        overflow: hidden;
+    }
+
+    /* Center the assistant avatar and chatbot header */
+    .chatbot-header {
+        text-align: center;
+    }
+
+    .assistant-avatar {
+        margin: 0 auto;
+        display: block;
     }
 }
