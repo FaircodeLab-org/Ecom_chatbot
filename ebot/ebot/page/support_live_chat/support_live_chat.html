@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Support Chat</title>
+  <!-- Include any required CSS; you can also move these styles to an external CSS file -->
+  <style>
+    .support-chat-wrapper {
+      max-width: 600px;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    #support-chat-window {
+      border: 1px solid #eee;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      background: #f9f9f9;
+    }
+    #support-chat-input {
+      width: 70%;
+      padding: 8px;
+      font-size: 14px;
+    }
+    #support-chat-send, #support-chat-close {
+      padding: 8px 12px;
+      margin-left: 5px;
+      border: none;
+      font-size: 14px;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #support-chat-send { background-color: #4CAF50; }
+    #support-chat-close { background-color: #f44336; }
+  </style>
+</head>
+<body>
+  <div class="support-chat-wrapper">
+    <h3>Live Support Chat</h3>
+    <div id="support-chat-window">
+      <!-- Chat messages will be loaded here -->
+    </div>
+    <input type="text" id="support-chat-input" placeholder="Type your message here..." />
+    <button id="support-chat-send">Send</button>
+    <button id="support-chat-close">Close Chat</button>
+  </div>
+
+  <!-- Include jQuery and Frappe JS libraries; adjust paths if necessary -->
+  <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+  <script src="/assets/frappe/js/lib/frappe/frappe.min.js"></script>
+  <!-- Include the custom support chat script -->
+  <script src="support_live_chat.js"></script>
+</body>
+</html>

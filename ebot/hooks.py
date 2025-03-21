@@ -5,6 +5,26 @@ app_description = "Ebot"
 app_email = "reddysrivinayofficial@gmail.com"
 app_license = "mit"
 
+
+
+
+
+
+
+web_include_css = [
+    "/assets/ebot/css/chatbot.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css",
+]
+
+web_include_js = [
+    "/assets/ebot/js/chatbot.js",
+    "/assets/ebot/js/jquery.format.js",
+]
+
+page_js = {
+"support_live_chat": "ebot/page/support_live_chat/support_live_chat.js"
+}
+
 # Apps
 # ------------------
 

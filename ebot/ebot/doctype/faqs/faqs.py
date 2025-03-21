@@ -1,4 +1,4 @@
-# File: plantbot/plantbot/doctype/faqs/faqs.py
+# File: ebot/ebot/doctype/faqs/faqs.py
 
 # Import necessary modules
 import frappe

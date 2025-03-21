@@ -1,5 +1,4 @@
-# File: plantbot/plantbot/api.py
-
+from __future__ import unicode_literals
 import frappe
 import openai
 import requests
@@ -11,7 +10,7 @@ import os
 import time
 
 # Import helper functions from faqs.py
-from plantbot.plantbot.doctype.faqs.faqs import get_openai_api_key, get_embedding
+from ebot.ebot.doctype.faqs.faqs import get_openai_api_key, get_embedding
 
 # Global variables
 faq_embeddings = []
@@ -83,11 +82,6 @@ def get_bot_response(user_message):
     response = process_message(user_message)
     return response
 
-
-
-
-
-
 def process_message(user_message):
     """
     Processes the user's message and returns the bot's response.
@@ -96,6 +90,7 @@ def process_message(user_message):
     product_results = search_products(user_message)
     if product_results:
         return build_product_response(product_results)
+    
     # Search the knowledge base for an exact match
     faq_answer = search_faq(user_message)
     if faq_answer:
@@ -106,11 +101,9 @@ def process_message(user_message):
     gpt_answer = get_gpt_interpreted_response(user_message, relevant_faqs)
     return gpt_answer
 
-
-
 COMMON_STOPWORDS = {
     "can", "i", "some", "the", "store", "products", "your", "my",
-    "a", "an", "of", "to", "and", "for", "me", "you", "get", "want",
+    "a", "an", "of", "to", "and", "for", "need","some", "me", "you", "get", "want",
     "in", "on", "we", "am", "are", "is", "it", "ask", "at", "please",
     "sir", "any", "how", "this", "that", "those", "these", "do",
     "does", "did", "let", "us", "from", "could", "would", "should",
@@ -121,10 +114,8 @@ def search_products(user_query):
     """
     Searches tabWebsite Item (wi) that are published,
     joined with tabItem (i) and tabItem Price (ip) for price_list_rate.
-    Removes common stopwords, then does an AND-based match so that
-    all tokens must appear in wi.item_name or wi.description.
-    
-    This prevents irrelevant items from matching filler words.
+    Removes common stopwords, then does an AND-based whole-word match so that
+    all tokens must appear as distinct words in wi.item_name or wi.description.
     """
 
     # 1) Tokenize user query & remove stopwords
@@ -135,20 +126,23 @@ def search_products(user_query):
     if not tokens:
         return []
 
-    # 2) Build AND clauses for each token
+    # 2) Build AND clauses for each token using REGEXP for whole word matching
     and_clauses = []
     values = {}
+
     for idx, token in enumerate(tokens):
         key = f"token_{idx}"
-        clause = f"(LOWER(wi.item_name) LIKE %({key})s OR LOWER(wi.description) LIKE %({key})s)"
+        # Use REGEXP with word boundaries so that it won’t match substrings of other words.
+        clause = f"(LOWER(wi.item_name) REGEXP %({key})s OR LOWER(wi.description) REGEXP %({key})s)"
         and_clauses.append(clause)
-        values[key] = f"%{token}%"
+        # The word boundaries ([[:<:]] and [[:>:]]) indicate the beginning and end of a word.
+        values[key] = f"[[:<:]]{token}[[:>:]]"
 
     and_condition = " AND ".join(and_clauses)
 
-    # 3) Build the final SQL with triple join
+    # 3) Build the final SQL with DISTINCT to avoid duplicates
     sql = f"""
-        SELECT
+        SELECT DISTINCT
             wi.name,
             wi.item_name AS title,
             wi.description,
@@ -159,9 +153,9 @@ def search_products(user_query):
         JOIN `tabItem` i ON i.item_code = wi.item_code
         JOIN `tabItem Price` ip ON ip.item_code = i.item_code
         WHERE wi.published = 1
-          AND ( {and_condition} )
+        AND ( {and_condition} )
         /* Optionally filter on price_list, e.g.:
-           AND ip.price_list = 'Standard Selling' */
+        AND ip.price_list = 'Standard Selling' */
     """
 
     # 4) Execute with token-based values
@@ -169,16 +163,12 @@ def search_products(user_query):
     return items
 
 
-
-
-
-
 def build_product_response(items):
     if not items:
         return "Sorry, I couldn’t find any matching products."
 
     response_lines = []
-    
+
     for item in items:
         # 1) Build product page URL
         route_url = f"/{item.route}" if item.route and not item.route.startswith("/") else item.route or "#"
@@ -213,10 +203,6 @@ def build_product_response(items):
             price_html = f"<p><b>Price:</b> {item.price_list_rate:.2f} USD</p>"
 
         # 6) Add to Cart (assuming a route like /cart?item_code=...)
-        # Because we haven't selected item_code in this query,
-        # you might do: SELECT wi.item_code or i.item_code as needed
-        # so you can pass that param to the cart.
-        # Example demonstration:
         item_code = item.name  # or i.item_code if you included it in the SELECT
         add_to_cart_url = f"/cart?item_code={item_code}&quantity=1"
 
@@ -242,28 +228,6 @@ def build_product_response(items):
         response_lines.append(product_html)
 
     return "".join(response_lines)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def search_faq(user_message):
     """
@@ -337,8 +301,6 @@ def get_relevant_faqs(user_message, top_k=5):
     # Sort FAQs by similarity score in descending order
     similarities.sort(key=lambda x: x[0], reverse=True)
 
-    # # Return top_k most similar FAQs
-    # relevant_faqs = [faq for sim, faq in similarities[:top_k] if sim > 0]  # Exclude FAQs with zero similarity
     MIN_SIMILARITY_THRESHOLD = 0.0  # You can adjust this value
     relevant_faqs = [faq for sim, faq in similarities[:top_k] if sim >= MIN_SIMILARITY_THRESHOLD]
 
@@ -449,7 +411,6 @@ def get_plant_diagnosis(image_file):
         "images": [encoded_image],
         "health": "all",  # Include health assessment
         "classification_level": "species",  # Level of classification
-        # Omit 'similar_images' if False
     }
 
     # Prepare query parameters
@@ -536,3 +497,129 @@ def process_plant_id_response(result):
         return response_message
     else:
         return "Could not identify the plant or its health status."
+
+@frappe.whitelist(allow_guest=True)
+def get_order_status(order_id):
+    """
+    Given an order number (order_id), this function retrieves the Sales Order
+    and returns a formatted status message.
+    """
+    try:
+        # Retrieve the Sales Order. Optionally check permissions here.
+        order = frappe.get_doc("Sales Order", order_id)
+        if not order:
+            return f"Order {order_id} was not found."
+
+        # Retrieve useful fields (Adjust field names if needed)
+        status = order.status  # Example: "Draft", "Submitted", etc.
+        order_date = order.transaction_date
+        customer = order.customer
+
+        msg = f"Order {order_id} for {customer} (dated {order_date}) is currently: {status}."
+
+        if order.get("tracking_no"):
+            msg += f" Your tracking number is {order.tracking_no}."
+            
+        return msg
+
+    except Exception as e:
+        frappe.log_error(f"Error fetching order status for {order_id}: {str(e)}", "Order Status Error")
+        return f"Sorry, we couldn’t retrieve the status for order {order_id}."
+
+@frappe.whitelist(allow_guest=True)
+def get_customer_support():
+    """
+    Returns customer support details.
+    """
+    # You can fetch this from settings or just return a static message.
+    support_message = (
+        "For customer support, please call 123-456-7890 or "
+        "email info@faircodelab.com. "
+        "Our support team is available 9am-5pm, Monday through Saturday."
+    )
+    return support_message
+
+@frappe.whitelist(allow_guest=True)
+def send_support_chat(message, session_id=None, sender=None):
+    """
+    Creates a new Support Chat Message record.
+    If no sender is provided, it defaults to frappe.session.user.
+    The receiver is set to a fixed support agent (for record purposes only).
+    If no session_id is provided (i.e., for the first message), a new session is generated.
+    Returns the session_id on success.
+    """
+    try:
+        if not sender:
+            sender = frappe.session.user
+
+        # For record-keeping only:
+        receiver = "support@yourdomain.com"
+
+        if not session_id:
+            session_id = f"{sender}-{int(time.time())}"
+
+        chat = frappe.get_doc({
+            "doctype": "Support Chat Message",
+            "subject": "Support Chat",
+            "chat_session_id": session_id,
+            "message": message,
+            "sender": sender,
+            "receiver": receiver,
+            "status": "open"
+        })
+        chat.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # Publish real-time event to all subscribers (omit "user" parameter)
+        frappe.publish_realtime(
+            "new_support_chat",
+            {
+                "session_id": session_id,
+                "message": message,
+                "sender": sender
+            }
+        )
+
+        return session_id
+
+    except Exception as e:
+        frappe.log_error(f"Error in send_support_chat: {str(e)}", "Support Chat Error")
+        return "Failed to send message."
+
+@frappe.whitelist(allow_guest=True)
+def get_support_chat_messages(session_id=None):
+    """
+    Retrieves support chat messages.
+    Filters by session_id if provided; otherwise, falls back to filtering by sender.
+    """
+    try:
+        filters = {"chat_session_id": session_id} if session_id else {"sender": frappe.session.user}
+        messages = frappe.get_all(
+            "Support Chat Message",
+            filters=filters,
+            fields=["sender", "message", "creation"],
+            order_by="creation asc"
+        )
+        return messages
+
+    except Exception as e:
+        frappe.log_error(f"Error fetching support messages: {str(e)}", "Support Chat Error")
+        return []
+
+@frappe.whitelist(allow_guest=True)
+def close_support_chat(session_id):
+    """
+    Closes a support chat session by updating its status to 'closed'. Also broadcasts a realtime event so that all clients
+    disable chat for that session.
+    """
+    try:
+        frappe.db.set_value("Support Chat Message", {"chat_session_id": session_id}, "status", "closed")
+        frappe.db.commit()
+
+        # Publish a realtime event to notify all connected clients that this session is closed.
+        frappe.publish_realtime("close_support_chat", {"session_id": session_id})
+        
+        return "Support chat closed."
+    except Exception as e:
+        frappe.log_error(f"Error closing support chat for {session_id}: {str(e)}", "Support Chat Error")
+        return "Failed to close support chat."

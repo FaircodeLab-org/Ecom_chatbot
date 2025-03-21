@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-21 12:44:23.581025",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "subject",
+  "message",
+  "sender",
+  "reciever",
+  "chat_session_id",
+  "status",
+  "creation1"
+ ],
+ "fields": [
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Text Editor",
+   "label": "Message"
+  },
+  {
+   "fieldname": "sender",
+   "fieldtype": "Link",
+   "label": "Sender",
+   "options": "User"
+  },
+  {
+   "fieldname": "reciever",
+   "fieldtype": "Link",
+   "label": "Reciever",
+   "options": "User"
+  },
+  {
+   "fieldname": "chat_session_id",
+   "fieldtype": "Data",
+   "label": "Chat Session"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "open\nclosed"
+  },
+  {
+   "fieldname": "creation1",
+   "fieldtype": "Datetime",
+   "label": "Creation"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-21 12:49:21.721856",
+ "modified_by": "Administrator",
+ "module": "Ebot",
+ "name": "Support Chat Message",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
