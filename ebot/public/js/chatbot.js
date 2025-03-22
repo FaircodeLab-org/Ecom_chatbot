@@ -118,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
           });
           
           document.getElementById('menu-support').addEventListener('click', function() {
+              orderStatusPrompt = false;
               supportChatActive = true;
               chatWindow.innerHTML = "";
               showBotMessage("Connecting you to support... You are now in live chat mode.");

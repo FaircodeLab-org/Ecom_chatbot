@@ -17,8 +17,8 @@ web_include_css = [
 ]
 
 web_include_js = [
-    "/assets/ebot/js/chatbot.js",
-    "/assets/ebot/js/jquery.format.js",
+    "/assets/ebot/js/chatbot.js"
+    # "/assets/ebot/js/jquery.format.js",
 ]
 
 page_js = {
