@@ -321,32 +321,109 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  function sendImage(file) {
-      showTypingIndicator();
-      var formData = new FormData();
-      formData.append('image', file);
+//   function sendImage(file) {
+//       showTypingIndicator();
+//       var formData = new FormData();
+//       formData.append('image', file);
 
-      $.ajax({
-          url: '/api/method/ebot.api.process_image',
-          type: 'POST',
-          data: formData,
-          headers: {
-              'X-Frappe-CSRF-Token': frappe.csrf_token
-          },
-          processData: false,
-          contentType: false,
-          success: function (r) {
-              hideTypingIndicator();
-              if (r.message) {
-                  showBotMessage(r.message);
-              }
-          },
-          error: function () {
-              hideTypingIndicator();
-              showBotMessage("Sorry, an error occurred while processing the image.");
-          }
-      });
-  }
+//       $.ajax({
+//           url: '/api/method/ebot.api.process_image',
+//           type: 'POST',
+//           data: formData,
+//           headers: {
+//               'X-Frappe-CSRF-Token': frappe.csrf_token
+//           },
+//           processData: false,
+//           contentType: false,
+//           success: function (r) {
+//               hideTypingIndicator();
+//               if (r.message) {
+//                   showBotMessage(r.message);
+//               }
+//           },
+//           error: function () {
+//               hideTypingIndicator();
+//               showBotMessage("Sorry, an error occurred while processing the image.");
+//           }
+//       });
+//   }
+
+function sendImage(file) {
+    showTypingIndicator();
+    var formData = new FormData();
+    formData.append('image', file);
+
+    if (supportChatActive) {
+        // In support mode, call our custom upload_support_image method
+        $.ajax({
+            url: '/api/method/ebot.api.upload_support_image',
+            type: 'POST',
+            data: formData,
+            headers: {
+                'X-Frappe-CSRF-Token': frappe.csrf_token
+            },
+            processData: false,
+            contentType: false,
+            success: function (r) {
+                hideTypingIndicator();
+                if (r.message && r.message !== "No image provided.") {
+                    // Build an inline HTML image tag
+                    var image_html = '<img src="' + r.message + '" style="max-width:200px; border-radius:8px;"/>';
+
+                    // Send the image as a support chat message
+                    frappe.call({
+                        method: 'ebot.api.send_support_chat',
+                        args: {
+                            message: image_html,
+                            session_id: supportChatSession
+                        },
+                        callback: function (response) {
+                            console.log("Support image sent:", response);
+                        }
+                    });
+
+                    // Optionally, display the image locally in the chatbot window
+                    showBotMessage(image_html);
+                } else {
+                    showBotMessage("No image was returned.");
+                }
+            },
+            error: function () {
+                hideTypingIndicator();
+                showBotMessage("Sorry, an error occurred while uploading the image.");
+            }
+        });
+    } else {
+        // For non-support mode, use the existing process_image method
+        $.ajax({
+            url: '/api/method/ebot.api.process_image',
+            type: 'POST',
+            data: formData,
+            headers: {
+                'X-Frappe-CSRF-Token': frappe.csrf_token
+            },
+            processData: false,
+            contentType: false,
+            success: function (r) {
+                hideTypingIndicator();
+                if (r.message) {
+                    showBotMessage(r.message);
+                }
+            },
+            error: function () {
+                hideTypingIndicator();
+                showBotMessage("Sorry, an error occurred while processing the image.");
+            }
+        });
+    }
+}
+
+
+
+
+
+
+
 
   function displayUserImage(file) {
       var reader = new FileReader();

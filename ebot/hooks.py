@@ -18,6 +18,7 @@ web_include_css = [
 
 web_include_js = [
     "/assets/ebot/js/chatbot.js"
+    # "/assets/ebot/js/add_to_cart.js",
     # "/assets/ebot/js/jquery.format.js",
 ]
 

@@ -11,6 +11,7 @@ import time
 
 # Import helper functions from faqs.py
 from ebot.ebot.doctype.faqs.faqs import get_openai_api_key, get_embedding
+# from frappe.utils.file_manager import get_file_data_from_form
 
 # Global variables
 faq_embeddings = []
@@ -163,6 +164,28 @@ def search_products(user_query):
     return items
 
 
+
+# @frappe.whitelist(allow_guest=True)
+# def add_item_to_cart(item_code, quantity=1):
+#     """
+#     Adds an item to the shopping cart.
+#     This serves as an alternative to relying on the URL based Add-to-Cart,
+#     and circumvents potential missing asset issues.
+#     """
+#     try:
+#         # Create a new cart item document. Adjust the doctype and fields according to your ERPNext configuration.
+#         # For instance, ERPNext may use "Shopping Cart" or "Website Order" or custom doctype.
+#         cart = frappe.new_doc("Shopping Cart")
+#         cart.item_code = item_code
+#         cart.qty = quantity
+#         cart.insert(ignore_permissions=True)
+#         frappe.db.commit()
+#         return "Item added to cart"
+#     except Exception as e:
+#         frappe.log_error(f"Error in add_item_to_cart: {str(e)}", "Cart Error")
+#     return "Failed to add item to cart"
+
+
 def build_product_response(items):
     if not items:
         return "Sorry, I couldn’t find any matching products."
@@ -214,7 +237,7 @@ def build_product_response(items):
             Add to Cart
         </a>
         """
-
+          
         # 7) Combine everything
         product_html = f"""
         <div style="margin-bottom: 15px;">
@@ -368,6 +391,78 @@ def get_gpt_interpreted_response(user_message, relevant_faqs):
     except Exception as e:
         frappe.log_error(f"OpenAI API Error: {str(e)}", "Chatbot Response Error")
         return "I'm sorry, I'm having trouble responding right now. Please try again later."
+    
+
+
+
+
+
+
+
+
+
+
+# @frappe.whitelist(allow_guest=True)
+# def upload_support_image():
+#     """
+#     Save the uploaded image as a File (attached to Support Chat Message)
+#     and return the public URL. This method is used in live support chat
+#     to send image messages.
+#     """
+#     # Check if an image is provided
+#     if 'image' not in frappe.request.files:
+#         return {"error": "No image provided."}
+
+#     image_file = frappe.request.files['image']
+    
+#     # Create a new File document
+#     file_doc = frappe.get_doc({
+#         "doctype": "File",
+#         "file_name": image_file.filename,
+#         "is_private": 0,
+#         "attached_to_doctype": "Support Chat Message",
+#         "content": get_file_data_from_form(image_file)  # Handles binary data properly
+#     })
+    
+#     file_doc.insert(ignore_permissions=True)
+#     frappe.db.commit()
+    
+#     return file_doc.file_url
+
+
+@frappe.whitelist(allow_guest=True)
+def upload_support_image():
+    """
+    Uploads an image from a support chat message by creating a new File document and returns its public URL.
+    """
+    # Check if an image was provided in the request
+    if 'image' not in frappe.request.files:
+        return "No image provided."
+
+    image_file = frappe.request.files['image']
+    filedata = image_file.read()
+    file_name = image_file.filename
+
+    # Create a new File document manually
+    file_doc = frappe.new_doc("File")
+    file_doc.file_name = file_name
+    file_doc.content = filedata
+    file_doc.is_private = 0  # Make file public
+
+    # Optionally, you may set additional fields such as attached_to_doctype if needed:
+    # file_doc.attached_to_doctype = "Support Chat Message"
+
+    try:
+        file_doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        return file_doc.file_url
+    except Exception as e:
+        frappe.log_error(f"Error in upload_support_image: {str(e)}", "Support Image Upload Error")
+        return "Failed to upload image."
+
+
+
+
 
 @frappe.whitelist(allow_guest=True)
 def process_image():
