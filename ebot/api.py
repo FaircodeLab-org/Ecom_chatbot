@@ -164,26 +164,6 @@ def search_products(user_query):
 
 
 
-# @frappe.whitelist(allow_guest=True)
-# def add_item_to_cart(item_code, quantity=1):
-#     """
-#     Adds an item to the shopping cart.
-#     This serves as an alternative to relying on the URL based Add-to-Cart,
-#     and circumvents potential missing asset issues.
-#     """
-#     try:
-#         # Create a new cart item document. Adjust the doctype and fields according to your ERPNext configuration.
-#         # For instance, ERPNext may use "Shopping Cart" or "Website Order" or custom doctype.
-#         cart = frappe.new_doc("Shopping Cart")
-#         cart.item_code = item_code
-#         cart.qty = quantity
-#         cart.insert(ignore_permissions=True)
-#         frappe.db.commit()
-#         return "Item added to cart"
-#     except Exception as e:
-#         frappe.log_error(f"Error in add_item_to_cart: {str(e)}", "Cart Error")
-#     return "Failed to add item to cart"
-
 
 def build_product_response(items):
     if not items:
@@ -436,80 +416,128 @@ def upload_support_image():
 
 
 
-
-
 @frappe.whitelist(allow_guest=True)
 def process_image():
-    """
-    Processes an uploaded image (non-support mode) by sending the image (as a data URL) to OpenAI's ChatCompletion API.
-    Prompts a follow-up question by returning the AI analysis.
-    """
-    OPENAI_API_KEY = frappe.conf.get("openai_api_key")
-    if not OPENAI_API_KEY:
-        frappe.log_error("OpenAI API key is not set.", "OpenAI Image Error")
-        return "I'm sorry, the image analysis service is not available at this time."
+    OPENAI_API_KEY = frappe.local.conf.get("openai_api_key", None)
+    OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
     if 'image' not in frappe.request.files:
-        return "No image provided."
-    
-    image_file = frappe.request.files['image']
-    image_bytes = image_file.read()
-    if not image_bytes:
-        return "The uploaded image is empty or unreadable."
-    
-    # Convert the image to base64 and create a data URL
-    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-    data_url = f"data:image/jpeg;base64,{image_base64}"
+        return {"error": "No image provided."}
 
-    payload = {
-        "model": "gpt-4-turbo",  # use your available model; adjust if needed
-        "messages": [
-            {"role": "system", "content": "You are an AI that analyzes images and provides insights."},
-            {"role": "user", "content": "Please analyze this image and describe its contents: " + data_url}
-        ],
-        "max_tokens": 500,
-        "temperature": 0.7
-    }
+    image_file = frappe.request.files['image']
+    image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
 
     headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + OPENAI_API_KEY
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "gpt-4-turbo",
+        "messages": [
+            {"role": "system", "content": "You are an AI that analyzes images and provides insights."},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Analyze this image and describe its contents."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                ]
+            }
+        ],
+        "max_tokens": 500
     }
 
     try:
-    #     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-    #     if response.ok:
-    #         result = response.json()
-    #         answer = result['choices'][0]['message']['content'].strip()
-    #         # Optionally, you may prepend a prompt like:
-    #         answer = "Thank you for uploading the image. What would you like to know about it?\n" + answer
-    #         return answer
-    #     else:
-    #         error_message = f"OpenAI API Error {response.status_code}: {response.text}"
-    #         frappe.log_error(error_message, "OpenAI Image Analysis Error")
-    #         return "An error occurred while processing the image. Please try again later."
-    # except Exception as e:
-    #     frappe.log_error(f"Exception in process_image: {str(e)}\nTraceback:\n{frappe.get_traceback()}", "OpenAI Image Analysis Error")
-    #     return "An error occurred while processing the image. Please try again later."
-        response = requests.post("https://api.openai.com/v1/chat/completions",headers=headers,json=payload)
+        response = requests.post(OPENAI_ENDPOINT, json=payload, headers=headers)
+        response_data = response.json()
 
-        if response.ok:
-            result = response.json()
-            answer = result['choices'][0]['message']['content'].strip()
-            answer = "Thank you for uploading the image. What would you like to know about it?\n" + answer
-            return answer
-        else:
-            error_message = f"OpenAI API Error {response.status_code}: {response.text}"
-            frappe.log_error(error_message, "OpenAI Image Analysis Error")
-            return "An error occurred while processing the image. Please try again later."
+        if "error" in response_data:
+            error_message = response_data["error"].get("message", "Unknown error")
+            frappe.log_error(f"OpenAI Error: {error_message[:120]}", "OpenAI API Debug")
+            return {"error": error_message}
 
-    except Exception as e:
-        # Optionally: if you detect a rate-limit error, pause then retry
-        # import time
-        time.sleep(1.2)  # Wait a bit longer than the suggested time
-        # Potentially try again here or return an error message.
-        frappe.log_error(f"Exception in process_image: {str(e)}", "OpenAI Image Analysis Error")
-        return "An error occurred while processing the image. Please try again later."
+        analysis = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No response received.")
+        return {"message": "Image processed successfully.", "analysis": analysis}
+
+    except requests.exceptions.RequestException as e:
+        frappe.log_error(f"Request Exception: {str(e)[:120]}", "OpenAI API Debug")
+        return {"error": "Failed to connect to OpenAI API."}
+
+
+
+
+# @frappe.whitelist(allow_guest=True)
+# def process_image():
+#     """
+#     Processes an uploaded image (non-support mode) by sending the image (as a data URL) to OpenAI's ChatCompletion API.
+#     Prompts a follow-up question by returning the AI analysis.
+#     """
+#     OPENAI_API_KEY = frappe.conf.get("openai_api_key")
+#     if not OPENAI_API_KEY:
+#         frappe.log_error("OpenAI API key is not set.", "OpenAI Image Error")
+#         return "I'm sorry, the image analysis service is not available at this time."
+
+#     if 'image' not in frappe.request.files:
+#         return "No image provided."
+    
+#     image_file = frappe.request.files['image']
+#     image_bytes = image_file.read()
+#     if not image_bytes:
+#         return "The uploaded image is empty or unreadable."
+    
+#     # Convert the image to base64 and create a data URL
+#     image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+#     data_url = f"data:image/jpeg;base64,{image_base64}"
+
+#     payload = {
+#         "model": "gpt-4-turbo",  # use your available model; adjust if needed
+#         "messages": [
+#             {"role": "system", "content": "You are an AI that analyzes images and provides insights."},
+#             {"role": "user", "content": "Please analyze this image and describe its contents: " + data_url}
+#         ],
+#         "max_tokens": 500,
+#         "temperature": 0.7
+#     }
+
+#     headers = {
+#         "Content-Type": "application/json",
+#         "Authorization": "Bearer " + OPENAI_API_KEY
+#     }
+
+#     try:
+#     #     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+#     #     if response.ok:
+#     #         result = response.json()
+#     #         answer = result['choices'][0]['message']['content'].strip()
+#     #         # Optionally, you may prepend a prompt like:
+#     #         answer = "Thank you for uploading the image. What would you like to know about it?\n" + answer
+#     #         return answer
+#     #     else:
+#     #         error_message = f"OpenAI API Error {response.status_code}: {response.text}"
+#     #         frappe.log_error(error_message, "OpenAI Image Analysis Error")
+#     #         return "An error occurred while processing the image. Please try again later."
+#     # except Exception as e:
+#     #     frappe.log_error(f"Exception in process_image: {str(e)}\nTraceback:\n{frappe.get_traceback()}", "OpenAI Image Analysis Error")
+#     #     return "An error occurred while processing the image. Please try again later."
+#         response = requests.post("https://api.openai.com/v1/chat/completions",headers=headers,json=payload)
+
+#         if response.ok:
+#             result = response.json()
+#             answer = result['choices'][0]['message']['content'].strip()
+#             answer = "Thank you for uploading the image. What would you like to know about it?\n" + answer
+#             return answer
+#         else:
+#             error_message = f"OpenAI API Error {response.status_code}: {response.text}"
+#             frappe.log_error(error_message, "OpenAI Image Analysis Error")
+#             return "An error occurred while processing the image. Please try again later."
+
+#     except Exception as e:
+#         # Optionally: if you detect a rate-limit error, pause then retry
+#         # import time
+#         time.sleep(1.2)  # Wait a bit longer than the suggested time
+#         # Potentially try again here or return an error message.
+#         frappe.log_error(f"Exception in process_image: {str(e)}", "OpenAI Image Analysis Error")
+#         return "An error occurred while processing the image. Please try again later."
 
 
 

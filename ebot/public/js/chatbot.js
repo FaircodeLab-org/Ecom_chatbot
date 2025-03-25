@@ -433,16 +433,18 @@ function sendImage(file) {
             contentType: false,
             success: function (r) {
                 hideTypingIndicator();
-                if (r.message) {
+                if (r.message && r.message.analysis) {
                     // Instead of immediately displaying the answer,
                     // store it in image_context and prompt for follow-up.
-                    image_context = r.message;
+                    // image_context = r.message;
+                    
                     
                     // Display a special message prompting the user:
                     showBotMessage("Thank you for uploading the image. What would you like to know about it?");
                     
                     // Optionally, clear the input field:
                     userInputField.value = "";
+                    showBotMessage(r.message.analysis);
                 }
             },
             error: function () {
