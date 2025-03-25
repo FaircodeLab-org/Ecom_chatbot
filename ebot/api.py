@@ -134,7 +134,7 @@ def search_products(user_query):
     for idx, token in enumerate(tokens):
         key = f"token_{idx}"
         # Use REGEXP with word boundaries so that it won’t match substrings of other words.
-        clause = f"(LOWER(wi.item_name) REGEXP %({key})s OR LOWER(wi.description) REGEXP %({key})s)"
+        clause = f"LOWER(wi.item_name) REGEXP %({key})s"
         and_clauses.append(clause)
         # The word boundaries ([[:<:]] and [[:>:]]) indicate the beginning and end of a word.
         values[key] = f"[[:<:]]{token}[[:>:]]"
@@ -146,7 +146,6 @@ def search_products(user_query):
         SELECT DISTINCT
             wi.name,
             wi.item_name AS title,
-            wi.description,
             wi.thumbnail,
             wi.route,
             ip.price_list_rate
@@ -214,16 +213,16 @@ def build_product_response(items):
             </a>
             """
 
-        # 4) Description
-        desc = item.description or "No description available."
-        desc_html = f"<p style='margin: 5px 0;'>{desc}</p>"
+        # # 4) Description
+        # desc = item.description or "No description available."
+        # desc_html = f"<p style='margin: 5px 0;'>{desc}</p>"
 
         # 5) Display price
         # 'price_list_rate' from tabItem Price
         price_html = ""
         if item.get("price_list_rate") is not None:
             # For example, show with currency
-            price_html = f"<p><b>Price:</b> {item.price_list_rate:.2f} USD</p>"
+            price_html = f"<p><b>Price:</b> {item.price_list_rate:.2f} Rs</p>"
 
         # 6) Add to Cart (assuming a route like /cart?item_code=...)
         item_code = item.name  # or i.item_code if you included it in the SELECT
@@ -242,7 +241,7 @@ def build_product_response(items):
         product_html = f"""
         <div style="margin-bottom: 15px;">
             {product_name_html}
-            {desc_html}
+            
             {image_html}
             {price_html}
             {add_to_cart_html}
@@ -402,33 +401,6 @@ def get_gpt_interpreted_response(user_message, relevant_faqs):
 
 
 
-# @frappe.whitelist(allow_guest=True)
-# def upload_support_image():
-#     """
-#     Save the uploaded image as a File (attached to Support Chat Message)
-#     and return the public URL. This method is used in live support chat
-#     to send image messages.
-#     """
-#     # Check if an image is provided
-#     if 'image' not in frappe.request.files:
-#         return {"error": "No image provided."}
-
-#     image_file = frappe.request.files['image']
-    
-#     # Create a new File document
-#     file_doc = frappe.get_doc({
-#         "doctype": "File",
-#         "file_name": image_file.filename,
-#         "is_private": 0,
-#         "attached_to_doctype": "Support Chat Message",
-#         "content": get_file_data_from_form(image_file)  # Handles binary data properly
-#     })
-    
-#     file_doc.insert(ignore_permissions=True)
-#     frappe.db.commit()
-    
-#     return file_doc.file_url
-
 
 @frappe.whitelist(allow_guest=True)
 def upload_support_image():
@@ -464,134 +436,95 @@ def upload_support_image():
 
 
 
+
+
 @frappe.whitelist(allow_guest=True)
 def process_image():
-    if 'image' in frappe.request.files:
-        image_file = frappe.request.files['image']
+    """
+    Processes an uploaded image (non-support mode) by sending the image (as a data URL) to OpenAI's ChatCompletion API.
+    Prompts a follow-up question by returning the AI analysis.
+    """
+    OPENAI_API_KEY = frappe.conf.get("openai_api_key")
+    if not OPENAI_API_KEY:
+        frappe.log_error("OpenAI API key is not set.", "OpenAI Image Error")
+        return "I'm sorry, the image analysis service is not available at this time."
 
-        # Call the Plant.id API with the image
-        diagnosis = get_plant_diagnosis(image_file)
-
-        # Return the diagnosis to the frontend
-        return diagnosis
-    else:
+    if 'image' not in frappe.request.files:
         return "No image provided."
+    
+    image_file = frappe.request.files['image']
+    image_bytes = image_file.read()
+    if not image_bytes:
+        return "The uploaded image is empty or unreadable."
+    
+    # Convert the image to base64 and create a data URL
+    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+    data_url = f"data:image/jpeg;base64,{image_base64}"
 
-@frappe.whitelist(allow_guest=True)
-def get_plant_diagnosis(image_file):
-    # Retrieve the Plant.id API key from the site configuration
-    plantid_api_key = frappe.conf.get("plantid_api_key")
-    if not plantid_api_key:
-        frappe.log_error("Plant.id API key not found in site config.", "Chatbot Error")
-        return "I'm sorry, I cannot process your request at the moment."
-
-    url = "https://api.plant.id/v3/identification"
+    payload = {
+        "model": "gpt-4-turbo",  # use your available model; adjust if needed
+        "messages": [
+            {"role": "system", "content": "You are an AI that analyzes images and provides insights."},
+            {"role": "user", "content": "Please analyze this image and describe its contents: " + data_url}
+        ],
+        "max_tokens": 500,
+        "temperature": 0.7
+    }
 
     headers = {
         "Content-Type": "application/json",
-        "Api-Key": plantid_api_key,
-    }
-
-    # Read the image content
-    image_bytes = image_file.read()
-    if not image_bytes:
-        frappe.log_error("Image file is empty.", "Image Processing Error")
-        return "The uploaded image is empty or unreadable."
-
-    # Convert the image to base64
-    encoded_image = base64.b64encode(image_bytes).decode('utf-8')
-
-    # Prepare the request payload
-    payload = {
-        "images": [encoded_image],
-        "health": "all",  # Include health assessment
-        "classification_level": "species",  # Level of classification
-    }
-
-    # Prepare query parameters
-    params = {
-        "plant_details": "common_names,url,wiki_description,wiki_image,taxonomy,synonyms",
-        "disease_details": "description,treatment",
-        "language": "en",
+        "Authorization": "Bearer " + OPENAI_API_KEY
     }
 
     try:
-        # Make the POST request with query parameters
-        response = requests.post(url, headers=headers, params=params, json=payload)
+    #     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    #     if response.ok:
+    #         result = response.json()
+    #         answer = result['choices'][0]['message']['content'].strip()
+    #         # Optionally, you may prepend a prompt like:
+    #         answer = "Thank you for uploading the image. What would you like to know about it?\n" + answer
+    #         return answer
+    #     else:
+    #         error_message = f"OpenAI API Error {response.status_code}: {response.text}"
+    #         frappe.log_error(error_message, "OpenAI Image Analysis Error")
+    #         return "An error occurred while processing the image. Please try again later."
+    # except Exception as e:
+    #     frappe.log_error(f"Exception in process_image: {str(e)}\nTraceback:\n{frappe.get_traceback()}", "OpenAI Image Analysis Error")
+    #     return "An error occurred while processing the image. Please try again later."
+        response = requests.post("https://api.openai.com/v1/chat/completions",headers=headers,json=payload)
 
-        # Log response status and content for debugging
-        frappe.logger().debug(f"Plant.id API response status code: {response.status_code}")
-        frappe.logger().debug(f"Plant.id API response text: {response.text}")
-
-        # Check if response is successful
         if response.ok:
             result = response.json()
-            # Process the API Response
-            diagnosis = process_plant_id_response(result)
-            return diagnosis
+            answer = result['choices'][0]['message']['content'].strip()
+            answer = "Thank you for uploading the image. What would you like to know about it?\n" + answer
+            return answer
         else:
-            error_message = f"Plant.id API Error {response.status_code}: {response.text}"
-            frappe.log_error(error_message[:140], "Plant.id API Error")  # Truncate error_message
+            error_message = f"OpenAI API Error {response.status_code}: {response.text}"
+            frappe.log_error(error_message, "OpenAI Image Analysis Error")
             return "An error occurred while processing the image. Please try again later."
+
     except Exception as e:
-        frappe.log_error(f"Exception in get_plant_diagnosis: {str(e)}\nTraceback:\n{frappe.get_traceback()}", "Plant.id API Error")
+        # Optionally: if you detect a rate-limit error, pause then retry
+        # import time
+        time.sleep(1.2)  # Wait a bit longer than the suggested time
+        # Potentially try again here or return an error message.
+        frappe.log_error(f"Exception in process_image: {str(e)}", "OpenAI Image Analysis Error")
         return "An error occurred while processing the image. Please try again later."
 
-def process_plant_id_response(result):
-    # Extract plant suggestions
-    classification = result.get('result', {}).get('classification', {})
-    suggestions = classification.get('suggestions', [])
 
-    if suggestions:
-        # Take the top suggestion
-        suggestion = suggestions[0]
-        plant_name = suggestion.get('name', 'Unknown plant')
-        details = suggestion.get('details', {})
-        common_names = details.get('common_names', [])
-        description = details.get('wiki_description', {}).get('value', '')
-        plant_url = details.get('url', '')
 
-        response_message = f"<b>Plant Name:</b> {plant_name}<br>"
-        if common_names:
-            response_message += f"<b>Common Names:</b> {', '.join(common_names)}<br>"
-        if description:
-            response_message += f"<b>Description:</b> {description}<br>"
-        if plant_url:
-            response_message += f"<a href='{plant_url}' target='_blank'>Learn more</a><br><br>"
 
-        # Health assessment
-        health_assessment = result.get('result', {})
-        is_healthy = health_assessment.get('is_healthy', {}).get('binary', True)
-        if not is_healthy:
-            response_message += "<b>The plant may have health issues.</b><br>"
-            diseases = health_assessment.get('disease', {}).get('suggestions', [])
-            if diseases:
-                response_message += "<b>Possible Diseases:</b><br>"
-                for disease in diseases:
-                    name = disease.get('name', 'Unknown disease')
-                    disease_details = disease.get('details', {})
-                    disease_description = disease_details.get('description', {}).get('value', '')
-                    treatment = disease_details.get('treatment', {})
-                    response_message += f"<b>{name}</b><br>"
-                    if disease_description:
-                        response_message += f"Description: {disease_description}<br>"
-                    if treatment:
-                        # Treatment can be a dictionary with 'biological', 'chemical', 'prevention'
-                        treatment_info = []
-                        for key, value in treatment.items():
-                            if value:
-                                treatment_info.append(f"{key.capitalize()}: {value}")
-                        if treatment_info:
-                            response_message += f"Treatment: {'; '.join(treatment_info)}<br>"
-                    response_message += "<br>"
-            else:
-                response_message += "No specific diseases identified.<br>"
-        else:
-            response_message += "<b>The plant appears to be healthy.</b><br>"
 
-        return response_message
-    else:
-        return "Could not identify the plant or its health status."
+
+
+
+
+
+
+
+
+
+
 
 @frappe.whitelist(allow_guest=True)
 def get_order_status(order_id):

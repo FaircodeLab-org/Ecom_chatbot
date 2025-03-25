@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var orderStatusPrompt = false;
   var supportChatActive = false; // true when in support mode
   var supportChatSession = null; // stores the current session ID for support chat
-
+  var image_context = ""; 
   var chatbotHTML = `
       <!-- Include Font Awesome -->
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -300,25 +300,52 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       // === Default Chatbot Processing ===
-      showUserMessage(userInput);
-      userInputField.value = '';
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+    //   showUserMessage(userInput);
+    //   userInputField.value = '';
+    //   chatWindow.scrollTop = chatWindow.scrollHeight;
 
-      showTypingIndicator();
-      frappe.call({
-          method: 'ebot.api.get_bot_response',
-          args: { user_message: userInput },
-          callback: function(r) {
-              hideTypingIndicator();
-              if (r.message) {
-                  showBotMessage(r.message);
-              }
-          },
-          error: function() {
-              hideTypingIndicator();
-              showBotMessage("Sorry, an error occurred.");
-          }
-      });
+    //   showTypingIndicator();
+    //   frappe.call({
+    //       method: 'ebot.api.get_bot_response',
+    //       args: { user_message: userInput },
+    //       callback: function(r) {
+    //           hideTypingIndicator();
+    //           if (r.message) {
+    //               showBotMessage(r.message);
+    //           }
+    //       },
+    //       error: function() {
+    //           hideTypingIndicator();
+    //           showBotMessage("Sorry, an error occurred.");
+    //       }
+    //   });
+    // === Default Chatbot Processing ===
+// If an image was recently uploaded and analyzed, prepend its context
+// if (image_context !== "") {
+//     // Combine image context with the user's follow-up question
+//     userInput = image_context + "\nFollow-up Question: " + userInput;
+//     // Clear the image_context so it is used only once
+//     image_context = "";
+// }
+    showUserMessage(userInput);
+    userInputField.value = '';
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    showTypingIndicator();
+    frappe.call({
+        method: 'ebot.api.get_bot_response',
+        args: { user_message: userInput },
+        callback: function(r) {
+            hideTypingIndicator();
+            if (r.message) {
+                showBotMessage(r.message);
+            }
+        },
+        error: function() {
+            hideTypingIndicator();
+            showBotMessage("Sorry, an error occurred.");
+        }
+    });
   }
 
 //   function sendImage(file) {
@@ -394,7 +421,7 @@ function sendImage(file) {
             }
         });
     } else {
-        // For non-support mode, use the existing process_image method
+        // Non-support mode processing using process_image
         $.ajax({
             url: '/api/method/ebot.api.process_image',
             type: 'POST',
@@ -407,7 +434,15 @@ function sendImage(file) {
             success: function (r) {
                 hideTypingIndicator();
                 if (r.message) {
-                    showBotMessage(r.message);
+                    // Instead of immediately displaying the answer,
+                    // store it in image_context and prompt for follow-up.
+                    image_context = r.message;
+                    
+                    // Display a special message prompting the user:
+                    showBotMessage("Thank you for uploading the image. What would you like to know about it?");
+                    
+                    // Optionally, clear the input field:
+                    userInputField.value = "";
                 }
             },
             error: function () {
@@ -417,6 +452,7 @@ function sendImage(file) {
         });
     }
 }
+
 
 
 

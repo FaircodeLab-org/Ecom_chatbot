@@ -326,7 +326,7 @@
 
 /* Minimized State */
 .chatbot-container.minimized {
-    max-height: 72px;
+    max-height: 65px;
 }
 .chatbot-container.minimized #chat-window,
 .chatbot-container.minimized .input-container {
@@ -354,7 +354,7 @@
 
     /* Increase the minimized container height so the header and a portion of the widget remain visible */
     .chatbot-container.minimized {
-        max-height: 150px; /* increased from 72px – adjust as needed */
+        max-height: 130px; /* increased from 72px – adjust as needed */
         /* transition: max-height 0.3s ease-in-out; */
     }
 
