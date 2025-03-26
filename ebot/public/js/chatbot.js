@@ -327,25 +327,68 @@ document.addEventListener('DOMContentLoaded', function () {
 //     // Clear the image_context so it is used only once
 //     image_context = "";
 // }
-    showUserMessage(userInput);
+
+
+    // if (image_context !== "") {
+    //     userInput = "Image analysis: " + image_context + "\nFollow-up question: " + userInput;
+    //     // Then clear the stored analysis so it is used only once:
+    //     image_context = "";
+    //     }
+    // showUserMessage(userInput);
+    // userInputField.value = '';
+    // chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    // showTypingIndicator();
+    // frappe.call({
+    //     method: 'ebot.api.get_bot_response',
+    //     args: { user_message: userInput },
+    //     callback: function(r) {
+    //         hideTypingIndicator();
+    //         if (r.message) {
+    //             showBotMessage(r.message);
+    //         }
+    //     },
+    //     error: function() {
+    //         hideTypingIndicator();
+    //         showBotMessage("Sorry, an error occurred.");
+    //     }
+    // });
+    // === Default Chatbot Processing ===
+// If an image was recently uploaded, use the stored analysis as the final answer
+if (image_context !== "") {
+    // Option 1: If you want to completely ignore the follow-up text:
+    showUserMessage(userInput);  // show user's follow-up message
     userInputField.value = '';
     chatWindow.scrollTop = chatWindow.scrollHeight;
+    
+    // Then, output the stored analysis directly:
+    showBotMessage(image_context);
+    // Clear the stored image analysis so it isn’t reused:
+    image_context = "";
+    // Return early so that no further API call is made:
+    return;
+}
 
-    showTypingIndicator();
-    frappe.call({
-        method: 'ebot.api.get_bot_response',
-        args: { user_message: userInput },
-        callback: function(r) {
-            hideTypingIndicator();
-            if (r.message) {
-                showBotMessage(r.message);
-            }
-        },
-        error: function() {
-            hideTypingIndicator();
-            showBotMessage("Sorry, an error occurred.");
+// Otherwise, process normally:
+showUserMessage(userInput);
+userInputField.value = '';
+chatWindow.scrollTop = chatWindow.scrollHeight;
+
+showTypingIndicator();
+frappe.call({
+    method: 'ebot.api.get_bot_response',
+    args: { user_message: userInput },
+    callback: function(r) {
+        hideTypingIndicator();
+        if (r.message) {
+            showBotMessage(r.message);
         }
-    });
+    },
+    error: function() {
+        hideTypingIndicator();
+        showBotMessage("Sorry, an error occurred.");
+    }
+});
   }
 
 //   function sendImage(file) {
@@ -439,13 +482,17 @@ function sendImage(file) {
                     // image_context = r.message;
                     
                     
+                    image_context = r.message.analysis;
                     // Display a special message prompting the user:
                     showBotMessage("Thank you for uploading the image. What would you like to know about it?");
                     
                     // Optionally, clear the input field:
                     userInputField.value = "";
-                    showBotMessage(r.message.analysis);
+                    // showBotMessage(r.message.analysis);
                 }
+                else {
+                    showBotMessage("An error occurred while processing the image.");
+                    }
             },
             error: function () {
                 hideTypingIndicator();

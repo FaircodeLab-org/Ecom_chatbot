@@ -456,8 +456,16 @@ def process_image():
             frappe.log_error(f"OpenAI Error: {error_message[:120]}", "OpenAI API Debug")
             return {"error": error_message}
 
-        analysis = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No response received.")
-        return {"message": "Image processed successfully.", "analysis": analysis}
+        if response.ok:
+            result = response.json()
+            # Extract the AI response:
+            analysis = result['choices'][0]['message']['content'].strip()
+            # Return only the analysis
+            return {"analysis": analysis}
+        else:
+            error_message = f"OpenAI API Error {response.status_code}: {response.text}"
+            frappe.log_error(error_message, "OpenAI Image Analysis Error")
+            return {"error": "An error occurred while processing the image. Please try again later."}
 
     except requests.exceptions.RequestException as e:
         frappe.log_error(f"Request Exception: {str(e)[:120]}", "OpenAI API Debug")
