@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var isMinimized = false;
   var isRecording = false;
   var isTyping = false;
-
+ 
   frappe.realtime.on("new_support_chat", function(data) {
       console.log("Chatbot realtime event received:", data);
       if (supportChatActive && supportChatSession && data.session_id === supportChatSession) {
@@ -96,50 +96,170 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Display welcome message only once
       if (chatWindow.dataset.hasWelcome === 'false') {
-          showBotMessage("Hello! I'm your friendly chatbot. How can I assist you today?");
+        showBotMessage("Hello! I'm your friendly chatbot. How can I assist you today?");
+        initChatbotMenu();
+        
+    //   if (chatWindow.dataset.hasWelcome === 'false') {
+    //       showBotMessage("Hello! I'm your friendly chatbot. How can I assist you today?");
           
-          var menuHTML = `
-              <div id="chatbot-menu" style="margin-top: 10px; text-align: center; display: flex; justify-content: center; gap: 10px;">
-                  <button id="menu-order-status" style="padding: 8px 16px; margin: 5px; border: none; background-color: #4CAF50; color: white; border-radius: 4px; cursor: pointer;">
-                      Check Order Status
-                  </button>
-                  <button id="menu-support" style="padding: 8px 16px; margin: 5px; border: none; background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
-                      Customer Support
-                  </button>
-              </div>`;
+    //       var menuHTML = `
+    //           <div id="chatbot-menu" style="margin-top: 10px; text-align: center; display: flex; justify-content: center; gap: 10px;">
+    //               <button id="menu-order-status" style="padding: 8px 16px; margin: 5px; border: none; background-color: #4CAF50; color: white; border-radius: 4px; cursor: pointer;">
+    //                   Check Order Status
+    //               </button>
+    //               <button id="menu-support" style="padding: 8px 16px; margin: 5px; border: none; background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
+    //                   Customer Support
+    //               </button>
+    //           </div>`;
           
-          chatWindow.insertAdjacentHTML('beforeend', menuHTML);
-          chatWindow.dataset.hasWelcome = 'true';
+        //   chatWindow.insertAdjacentHTML('beforeend', menuHTML);
+        //   chatWindow.dataset.hasWelcome = 'true';
+        //   var original_menu = document.getElementById('chatbot-menu').outerHTML;
 
-          document.getElementById('menu-order-status').addEventListener('click', function() {
-              showBotMessage("Sure, please enter your order number (e.g., SO-0001).");
-              orderStatusPrompt = true;
-              userInputField.focus();
-          });
+        //   document.getElementById('menu-order-status').addEventListener('click', function() {
+        //       showBotMessage("Sure, please enter your order number (e.g., SO-0001).");
+        //       orderStatusPrompt = true;
+        //       userInputField.focus();
+        //   });
           
-          document.getElementById('menu-support').addEventListener('click', function() {
-              orderStatusPrompt = false;
-              supportChatActive = true;
-              chatWindow.innerHTML = "";
-              showBotMessage("Connecting you to support... You are now in live chat mode.");
-
-              if (!supportChatSession) {
-                  // Call support chat API to create a session
-                  frappe.call({
-                      method: 'ebot.api.send_support_chat',
-                      args: { message: "Chat initiated", session_id: null },
-                      callback: function(r) {
-                          if (r.message) {
-                              supportChatSession = r.message;
-                              console.log("Support chat session initiated:", supportChatSession);
-                              loadSupportMessages(); // Call fallback polling once immediately
-                          }
-                      }
-                  });
-              } else {
-                  loadSupportMessages();
-              }
-          });
+        //   document.getElementById('menu-support').addEventListener('click', function () {
+        //     // Reset any pending orderStatusPrompt flag
+        //     orderStatusPrompt = false;
+        
+        //     // Clear the chat window and display support contact details
+        //     chatWindow.innerHTML = "";
+        
+        //     // Display support contact info
+        //     showBotMessage("For customer support, please contact us at support@example.com or call +91-XXXXXXXXXX.");
+        
+        //     // Append two buttons: "Live Chat Now" and "Go Back"
+        //     var supportButtonsHTML = `
+        //         <div id="support-options" style="text-align:center; margin-top:10px;">
+        //             <button id="live-chat-now" style="padding:8px 16px; margin:5px; border:none; background-color:#2196F3; color:#fff; border-radius:4px; cursor:pointer;">
+        //                 Live Chat Now
+        //             </button>
+        //             <button id="go-back" style="padding:8px 16px; margin:5px; border:none; background-color:#f44336; color:#fff; border-radius:4px; cursor:pointer;">
+        //                 Go Back
+        //             </button>
+        //         </div>
+        //     `;
+        //     chatWindow.insertAdjacentHTML('beforeend', supportButtonsHTML);
+        
+        //     // Add event listener for "Go Back" button
+        //     document.getElementById('go-back').addEventListener('click', function () {
+        //         // Restore the original menu
+        //         chatWindow.innerHTML = "";
+        //         chatWindow.insertAdjacentHTML('beforeend', original_menu);
+                
+        //         // Reset the dataset flag so the menu is considered shown again
+        //         chatWindow.dataset.hasWelcome = 'true';
+        //         supportChatActive = false; // Optionally, turn off support mode
+        //     });
+        
+        //     // Add event listener for "Live Chat Now" button
+        //     document.getElementById('live-chat-now').addEventListener('click', function () {
+        //         // Now initiate live support
+        //         supportChatActive = true;
+        //         chatWindow.innerHTML = "";
+        //         showBotMessage("Connecting you to support... You are now in live chat mode.");
+        
+        //         if (!supportChatSession) {
+        //             // Call support chat API to create a session
+        //             frappe.call({
+        //                 method: 'ebot.api.send_support_chat',
+        //                 args: { message: "Chat initiated", session_id: null },
+        //                 callback: function (r) {
+        //                     if (r.message) {
+        //                         supportChatSession = r.message;
+        //                         console.log("Support chat session initiated:", supportChatSession);
+        //                         loadSupportMessages(); // Call fallback polling once immediately
+        //                     }
+        //                 }
+        //             });
+        //         } else {
+        //             loadSupportMessages();
+        //         }
+        //     });
+        // });
+        function initChatbotMenu() {
+            var menuHTML = `
+                <div id="chatbot-menu" style="margin-top: 10px; text-align: center; display: flex; justify-content: center; gap: 10px;">
+                    <button id="menu-order-status" style="padding: 8px 16px; margin: 5px; border: none; background-color: #4CAF50; color: white; border-radius: 4px; cursor: pointer;">
+                        Check Order Status
+                    </button>
+                    <button id="menu-support" style="padding: 8px 16px; margin: 5px; border: none; background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
+                        Customer Support
+                    </button>
+                </div>
+            `;
+            
+            chatWindow.insertAdjacentHTML('beforeend', menuHTML);
+            chatWindow.dataset.hasWelcome = 'true';
+            
+            // Attach event listeners for the menu buttons:
+            document.getElementById('menu-order-status').addEventListener('click', function() {
+                showBotMessage("Sure, please enter your order number (e.g., SO-0001).");
+                orderStatusPrompt = true;
+                userInputField.focus();
+            });
+            
+            // Customer Support event (without immediately starting live chat):
+            document.getElementById('menu-support').addEventListener('click', function() {
+                // Reset any pending order status prompt:
+                orderStatusPrompt = false;
+                
+                // Clear window and show support contact info and options:
+                chatWindow.innerHTML = "";
+                showBotMessage("For customer support, please contact us at cs@plantonorganic.com or call +91-8129333277.");
+                
+                // Append two buttons: "Live Chat Now" and "Go Back"
+                var supportButtonsHTML = `
+                    <div id="support-options" style="text-align:center; margin-top:10px;">
+                        <button id="live-chat-now" style="padding:8px 16px; margin:5px; border:none; background-color:#2196F3; color:#fff; border-radius:4px; cursor:pointer;">
+                            Live Chat Now
+                        </button>
+                        <button id="go-back" style="padding:8px 16px; margin:5px; border:none; background-color:#f44336; color:#fff; border-radius:4px; cursor:pointer;">
+                            Go Back
+                        </button>
+                    </div>
+                `;
+                
+                chatWindow.insertAdjacentHTML('beforeend', supportButtonsHTML);
+                
+                // "Go Back" button event
+                document.getElementById('go-back').addEventListener('click', function() {
+                    // Clear the window and reinitialize the original menu:
+                    chatWindow.innerHTML = "";
+                    initChatbotMenu();
+                    supportChatActive = false; // Optional: disable support mode until chosen again
+                });
+                
+                // "Live Chat Now" button event: now actually start live chat
+                document.getElementById('live-chat-now').addEventListener('click', function() {
+                    supportChatActive = true;
+                    chatWindow.innerHTML = "";
+                    showBotMessage("Connecting you to support... You are now in live chat mode.");
+                    
+                    // Initiate the support session if not available
+                    if (!supportChatSession) {
+                        frappe.call({
+                            method: 'ebot.api.send_support_chat',
+                            args: { message: "Chat initiated", session_id: null },
+                            callback: function(r) {
+                                if (r.message) {
+                                    supportChatSession = r.message;
+                                    console.log("Support chat session initiated:", supportChatSession);
+                                    loadSupportMessages();
+                                }
+                            }
+                        });
+                    } else {
+                        loadSupportMessages();
+                    }
+                });
+            });
+        }
+        
 
           function loadSupportMessages() {
               if (supportChatActive && supportChatSession) {
@@ -268,29 +388,76 @@ document.addEventListener('DOMContentLoaded', function () {
                   showBotMessage("Message sent to support. Please wait for a reply.");
 
                   // Add "Close Chat" button if not present
-                  if (!document.getElementById('close-support-chat')) {
-                      var closeChatHTML = `
-                          <button id="close-support-chat" style="padding: 6px 12px; margin-top: 10px; border: none; background-color: #f44336; color: white; border-radius: 4px; cursor: pointer;">
-                              Close Chat
-                          </button>`;
-                      chatWindow.insertAdjacentHTML('beforeend', closeChatHTML);
+                //   if (!document.getElementById('close-support-chat')) {
+                //       var closeChatHTML = `
+                //           <button id="close-support-chat" style="padding: 6px 12px; margin-top: 10px; border: none; background-color: #f44336; color: white; border-radius: 4px; cursor: pointer;">
+                //               Close Chat
+                //           </button>`;
+                //       chatWindow.insertAdjacentHTML('beforeend', closeChatHTML);
 
-                      document.getElementById('close-support-chat').addEventListener('click', function() {
-                          frappe.call({
-                              method: 'ebot.api.close_support_chat',
-                              args: { session_id: supportChatSession },
-                              callback: function(r) {
-                                  showBotMessage("Your support session has been closed.");
-                                  supportChatActive = false;
-                                  supportChatSession = null;
-                                  document.getElementById('close-support-chat').remove();
-                              },
-                              error: function() {
-                                  showBotMessage("Sorry, an error occurred while closing the support chat.");
-                              }
-                          });
-                      });
-                  }
+                //       document.getElementById('close-support-chat').addEventListener('click', function() {
+                //           frappe.call({
+                //               method: 'ebot.api.close_support_chat',
+                //               args: { session_id: supportChatSession },
+                //               callback: function(r) {
+                //                   showBotMessage("Your support session has been closed.");
+                //                   supportChatActive = false;
+                //                   supportChatSession = null;
+                //                   document.getElementById('close-support-chat').remove();
+                //               },
+                //               error: function() {
+                //                   showBotMessage("Sorry, an error occurred while closing the support chat.");
+                //               }
+                //           });
+                //       });
+                //   }
+                if (!document.getElementById('close-support-chat')) {
+                    var closeChatHTML = `
+                        <button id="close-support-chat" style="padding: 6px 12px; margin-top: 10px; border: none; 
+                            background-color: #f44336; color: white; border-radius: 4px; cursor: pointer;">
+                            Close Chat
+                        </button>`;
+                
+                    chatWindow.insertAdjacentHTML('beforeend', closeChatHTML);
+                
+                    document.getElementById('close-support-chat').addEventListener('click', function () {
+                        frappe.call({
+                            method: 'ebot.api.close_support_chat',
+                            args: { session_id: supportChatSession },
+                            callback: function (r) {
+                                // Notify user that support chat is closed
+                                showBotMessage("Your support session has been closed.");
+                
+                                // Reset support mode
+                                supportChatActive = false;
+                                supportChatSession = null;
+                
+                                // Remove close chat button
+                                document.getElementById('close-support-chat').remove();
+                
+                                // Add a Return to Chat Menu button so the user can go back without refreshing
+                                var returnButtonHTML = `
+                                    <button id="return-to-menu" style="padding: 6px 12px; margin-top: 10px; border: none; 
+                                        background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
+                                        Return to Chat Menu
+                                    </button>`;
+                
+                                chatWindow.insertAdjacentHTML('beforeend', returnButtonHTML);
+                
+                                document.getElementById('return-to-menu').addEventListener('click', function () {
+                                    // Clear the chat window and reinitialize the main chatbot menu
+                                    chatWindow.innerHTML = "";
+                                    chatWindow.dataset.hasWelcome = 'false';
+                                    initChatbotMenu();
+                                });
+                            },
+                            error: function () {
+                                showBotMessage("Sorry, an error occurred while closing the support chat.");
+                            }
+                        });
+                    });
+                }
+                
               },
               error: function() {
                   showBotMessage("Sorry, an error occurred while sending your message.");
