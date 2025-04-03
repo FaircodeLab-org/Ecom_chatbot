@@ -499,17 +499,49 @@ def get_order_status(order_id):
         if not order:
             return f"Order {order_id} was not found."
 
-        # Retrieve useful fields (Adjust field names if needed)
-        status = order.status  # Example: "Draft", "Submitted", etc.
+    #     # Retrieve useful fields (Adjust field names if needed)
+    #     status = order.status  # Example: "Draft", "Submitted", etc.
+    #     order_date = order.transaction_date
+    #     customer = order.customer
+
+    #     msg = f"Order {order_id} for {customer} (dated {order_date}) is currently: {status}."
+
+    #     if order.get("tracking_no"):
+    #         msg += f" Your tracking number is {order.tracking_no}."
+            
+    #     return msg
+       # Retrieve standard fields
+        status = order.status  # e.g., "Draft", "Submitted", etc.
         order_date = order.transaction_date
         customer = order.customer
 
-        msg = f"Order {order_id} for {customer} (dated {order_date}) is currently: {status}."
+        # Retrieve custom fields (adjust field names as per your customization)
+        custom_del_date = order.get("custom_estimated_delievry_date")
+        custom_current_status = order.get("custom_current_status")
+        tracking_no = order.get("custom_tracking_no")
 
-        if order.get("tracking_no"):
-            msg += f" Your tracking number is {order.tracking_no}."
-            
+        # Construct a basic message
+        msg = f"Order {order_id} for {customer} (dated {order_date}) is currently: {status}.\n"
+
+        # Append additional custom fields if available
+        if tracking_no:
+            msg += f"Tracking Number: {tracking_no}\n"
+        if custom_del_date:
+            msg += f"Estimated Delivery Date: {custom_del_date}\n"
+        if custom_current_status:
+            msg += f"Current Status: {custom_current_status}\n"
+
+        # Append ordered items information
+        items = frappe.get_all("Sales Order Item", filters={"parent": order_id}, fields=["item_code", "item_name", "qty"])
+        if items:
+            msg += "\nItems in this order:\n"
+            for item in items:
+                msg += f" - {item.item_name} (Code: {item.item_code}), Quantity: {item.qty}\n"
+
         return msg
+
+
+
 
     except Exception as e:
         frappe.log_error(f"Error fetching order status for {order_id}: {str(e)}", "Order Status Error")
