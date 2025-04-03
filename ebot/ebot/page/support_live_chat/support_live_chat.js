@@ -103,6 +103,16 @@ frappe.pages['support_live_chat'].on_page_load = function (wrapper) {
         });
     });
 
+    
+    frappe.realtime.on("close_support_chat", function (data) {
+        console.log("Realtime close event received:", data);
+        if (currentSessionId && String(data.session_id) === String(currentSessionId)) {
+            appendMessage("System", "This support session has been closed.");
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+        }
+    });
+
     // Close chat event
     closeButton.addEventListener('click', function () {
         frappe.call({

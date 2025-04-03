@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showBotMessage(data.sender + ": " + data.message);
         }
     });
-  
+    
     // Toggle chatbot visibility
     chatbotToggle.onclick = function () {
         chatbotContainer.classList.add('active');
@@ -293,6 +293,19 @@ document.addEventListener('DOMContentLoaded', function () {
         chatbotContainer.classList.remove('active');
         chatbotToggle.style.display = 'block';
     };
+    frappe.realtime.on("close_support_chat", function (data) {
+        console.log("Realtime close event received (chatbot):", data);
+        if (supportChatSession && String(data.session_id) === String(supportChatSession)) {
+        showBotMessage("This support session has been closed.");
+        userInputField.disabled = true;
+        sendButton.disabled = true;
+        
+        
+            // Optionally remove the close button if added dynamically
+            var btn = document.getElementById('close-support-chat');
+            if (btn) btn.remove();
+        }
+        });
   
     // Minimize chatbot
     chatbotMinimize.onclick = function () {
