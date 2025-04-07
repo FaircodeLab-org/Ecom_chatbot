@@ -12,6 +12,49 @@ import time
 # Import helper functions from faqs.py
 from ebot.ebot.doctype.faqs.faqs import get_openai_api_key, get_embedding
 # from frappe.utils.file_manager import get_file_data_from_form
+from frappe.utils import nowdate
+from datetime import datetime, timedelta
+
+@frappe.whitelist(allow_guest=True)
+def get_personalized_recommendations(user_id):
+    """
+    Fetches user's purchase history and recommends products based on that history.
+    """
+    # Fetch user's purchase history
+    purchase_history = frappe.get_all('Sales Invoice Item', 
+                                     filters={'parent': ['in', frappe.get_all('Sales Invoice', 
+                                                                              filters={'customer': user_id, 
+                                                                                       'status': ['!=', 'Draft']}, 
+                                                                              pluck='name')]},
+                                     fields=['item_code', 'qty'],
+                                     limit=10)  # Limit to last 10 purchases for simplicity
+
+    # Fetch items from the history
+    items = [item['item_code'] for item in purchase_history]
+
+    # Simple recommendation logic: recommend items similar to what the user has bought
+    # Here we're assuming a simple rule-based approach. For more sophisticated recommendations, 
+    # you might want to use machine learning models or more complex algorithms.
+    recommended_items = []
+    for item_code in items:
+        # Find similar items (this is a placeholder logic, you'd need to define what 'similar' means)
+        similar_items = frappe.get_all('Item', 
+                                       filters={'item_group': frappe.get_value('Item', item_code, 'item_group')},
+                                       fields=['name', 'item_name', 'thumbnail', 'route'],
+                                       limit=3)  # Recommend 3 similar items per purchased item
+        recommended_items.extend(similar_items)
+
+    # Remove duplicates and limit to 5 recommendations
+    unique_recommendations = list({v['name']: v for v in recommended_items}.values())[:5]
+
+    # Build response
+    response = "Based on your purchase history, here are some recommendations for you:\n"
+    for item in unique_recommendations:
+        route_url = f"/{item.route}" if item.route and not item.route.startswith("/") else item.route or "#"
+        response += f"- <a href='{route_url}' target='_blank'>{item.item_name}</a>\n"
+
+    return response
+
 
 # Global variables
 faq_embeddings = []

@@ -21,7 +21,7 @@
 /* Chatbot Toggle Button */
 .chatbot-toggle-button {
     position: fixed;
-    bottom: 80px;
+    bottom: 40px;
     right: 30px;
     background-color: var(--amazon-orange);
     color: #fff;
@@ -77,7 +77,7 @@
 /* Chatbot Container */
 .chatbot-container {
     position: fixed;
-    bottom: 120px;
+    bottom: 40px;
     right: 30px;
     width: 360px;
     max-height: 500px;
@@ -269,7 +269,7 @@
 .input-container input[type="text"] {
     flex: 1 1 auto;
     min-width: 0;
-    padding: 12px 10px;
+    padding: 8px 8px;
     border: 1px solid #ccc;
     border-radius: 30px;
     outline: none;
@@ -332,6 +332,74 @@
 .chatbot-container.minimized .input-container {
     display: none;
 }
+
+
+
+
+/* Collapsible Menu Container (inside the chat container) */
+#chatbot-menu {
+    background: #fafafa;
+    border-top: 1px solid #ddd;
+    padding: 8px 10px;
+    font-family: 'Poppins', sans-serif;
+    }
+    
+    .menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    }
+    
+    .menu-header span {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--amazon-dark);
+    }
+    
+    .menu-toggle-button {
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--amazon-dark);
+    }
+    
+    .menu-content {
+    margin-top: 8px;
+    }
+    
+    .menu-button {
+    padding: 8px 16px;
+    margin: 5px;
+    border: none;
+    background-color: var(--amazon-orange);
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    }
+
+
+    .powered-by {
+        text-align: center;
+        font-size: 12px;
+        color: #aaa;
+        padding: 10px 0;
+        background-color: #fefefe;
+        border-top: 1px solid #ddd;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .powered-by a {
+        color: #ff9900; /* Match the accent color */
+        text-decoration: none;
+    }
+    
+    .powered-by a:hover {
+        text-decoration: underline;
+    }
 
 /* Mobile Responsiveness */
 /* @media screen and (max-width: 480px) {

@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </form>
+                    <div class="powered-by">
+                    Powered by <a href="https://www.faircodelab.com/" target="_blank">FairCodeLab</a>
+                    </div>
             </div>
         </div>`;
   
@@ -94,114 +97,77 @@ document.addEventListener('DOMContentLoaded', function () {
         chatbotToggle.style.display = 'none';
         isMinimized = false;
   
-        // Display welcome message only once
+        // // // Display welcome message only once
         if (chatWindow.dataset.hasWelcome === 'false') {
           showBotMessage("Hello! I'm your friendly chatbot. How can I assist you today?");
           initChatbotMenu();
-          
-      //   if (chatWindow.dataset.hasWelcome === 'false') {
-      //       showBotMessage("Hello! I'm your friendly chatbot. How can I assist you today?");
+        // if (!document.getElementById('welcome-message')) {
+        //     initChatbotMenu();
+        //     showBotMessage("Hello! I'm your friendly chatbot. How can I assist you today?", 'welcome-message');
             
-      //       var menuHTML = `
-      //           <div id="chatbot-menu" style="margin-top: 10px; text-align: center; display: flex; justify-content: center; gap: 10px;">
-      //               <button id="menu-order-status" style="padding: 8px 16px; margin: 5px; border: none; background-color: #4CAF50; color: white; border-radius: 4px; cursor: pointer;">
-      //                   Check Order Status
-      //               </button>
-      //               <button id="menu-support" style="padding: 8px 16px; margin: 5px; border: none; background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
-      //                   Customer Support
-      //               </button>
-      //           </div>`;
-            
-          //   chatWindow.insertAdjacentHTML('beforeend', menuHTML);
-          //   chatWindow.dataset.hasWelcome = 'true';
-          //   var original_menu = document.getElementById('chatbot-menu').outerHTML;
-  
-          //   document.getElementById('menu-order-status').addEventListener('click', function() {
-          //       showBotMessage("Sure, please enter your order number (e.g., SO-0001).");
-          //       orderStatusPrompt = true;
-          //       userInputField.focus();
-          //   });
-            
-          //   document.getElementById('menu-support').addEventListener('click', function () {
-          //     // Reset any pending orderStatusPrompt flag
-          //     orderStatusPrompt = false;
-          
-          //     // Clear the chat window and display support contact details
-          //     chatWindow.innerHTML = "";
-          
-          //     // Display support contact info
-          //     showBotMessage("For customer support, please contact us at support@example.com or call +91-XXXXXXXXXX.");
-          
-          //     // Append two buttons: "Live Chat Now" and "Go Back"
-          //     var supportButtonsHTML = `
-          //         <div id="support-options" style="text-align:center; margin-top:10px;">
-          //             <button id="live-chat-now" style="padding:8px 16px; margin:5px; border:none; background-color:#2196F3; color:#fff; border-radius:4px; cursor:pointer;">
-          //                 Live Chat Now
-          //             </button>
-          //             <button id="go-back" style="padding:8px 16px; margin:5px; border:none; background-color:#f44336; color:#fff; border-radius:4px; cursor:pointer;">
-          //                 Go Back
-          //             </button>
-          //         </div>
-          //     `;
-          //     chatWindow.insertAdjacentHTML('beforeend', supportButtonsHTML);
-          
-          //     // Add event listener for "Go Back" button
-          //     document.getElementById('go-back').addEventListener('click', function () {
-          //         // Restore the original menu
-          //         chatWindow.innerHTML = "";
-          //         chatWindow.insertAdjacentHTML('beforeend', original_menu);
-                  
-          //         // Reset the dataset flag so the menu is considered shown again
-          //         chatWindow.dataset.hasWelcome = 'true';
-          //         supportChatActive = false; // Optionally, turn off support mode
-          //     });
-          
-          //     // Add event listener for "Live Chat Now" button
-          //     document.getElementById('live-chat-now').addEventListener('click', function () {
-          //         // Now initiate live support
-          //         supportChatActive = true;
-          //         chatWindow.innerHTML = "";
-          //         showBotMessage("Connecting you to support... You are now in live chat mode.");
-          
-          //         if (!supportChatSession) {
-          //             // Call support chat API to create a session
-          //             frappe.call({
-          //                 method: 'ebot.api.send_support_chat',
-          //                 args: { message: "Chat initiated", session_id: null },
-          //                 callback: function (r) {
-          //                     if (r.message) {
-          //                         supportChatSession = r.message;
-          //                         console.log("Support chat session initiated:", supportChatSession);
-          //                         loadSupportMessages(); // Call fallback polling once immediately
-          //                     }
-          //                 }
-          //             });
-          //         } else {
-          //             loadSupportMessages();
-          //         }
-          //     });
-          // });
+        
+      
           function initChatbotMenu() {
-              var menuHTML = `
-                  <div id="chatbot-menu" style="margin-top: 10px; text-align: center; display: flex; justify-content: center; gap: 10px;">
-                      <button id="menu-order-status" style="padding: 8px 16px; margin: 5px; border: none; background-color: #4CAF50; color: white; border-radius: 4px; cursor: pointer;">
-                          Check Order Status
-                      </button>
-                      <button id="menu-support" style="padding: 8px 16px; margin: 5px; border: none; background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
-                          Customer Support
-                      </button>
-                  </div>
-              `;
-              
-              chatWindow.insertAdjacentHTML('beforeend', menuHTML);
+            // if (document.getElementById('chatbot-menu')) {
+            //     return; // Menu already exists, do not create it again
+            // }
+            //   var menuHTML = `
+            //       <div id="chatbot-menu" style="margin-top: 10px; text-align: center; display: flex; justify-content: center; gap: 10px;">
+            //           <button id="menu-order-status" style="padding: 8px 16px; margin: 5px; border: none; background-color: #4CAF50; color: white; border-radius: 4px; cursor: pointer;">
+            //               Check Order Status
+            //           </button>
+            //           <button id="menu-support" style="padding: 8px 16px; margin: 5px; border: none; background-color: #2196F3; color: white; border-radius: 4px; cursor: pointer;">
+            //               Customer Support
+            //           </button>
+            //       </div>
+            //   `;
+            
+            //   chatWindow.insertAdjacentHTML('beforeend', menuHTML);
               chatWindow.dataset.hasWelcome = 'true';
+            
+            var menuHTML = `
+                <div id="chatbot-menu" class="chatbot-menu-collapsed">
+                    <div class="menu-header">
+                    <span>Menu</span>
+                    <button id="menu-toggle" class="menu-toggle-button" aria-label="Expand Menu">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    </div>
+                    <div id="menu-content" class="menu-content" style="display: none; text-align: center;">
+                    <button id="menu-order-status" class="menu-button">Check Order Status</button>
+                    <button id="menu-support" class="menu-button">Customer Support</button>
+                    </div>
+                </div>
+                `;
+
+                // Insert the menu container between the chat window and the input form
+                chatForm.parentNode.insertBefore(
+                document.createRange().createContextualFragment(menuHTML),
+                chatForm
+                );
+
+                // Toggle click event for the menu header
+                document.getElementById('menu-toggle').addEventListener('click', function () {
+                var menuContent = document.getElementById('menu-content');
+                if (menuContent.style.display === 'none') {
+                    menuContent.style.display = 'block';
+                    this.innerHTML = '<i class="fas fa-chevron-down"></i>'; // update icon if needed
+                } else {
+                    menuContent.style.display = 'none';
+                    this.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                }
+                });
+
               
               // Attach event listeners for the menu buttons:
               document.getElementById('menu-order-status').addEventListener('click', function() {
                   showBotMessage("Sure, please enter your order number (e.g., SO-0001).");
                   orderStatusPrompt = true;
                   userInputField.focus();
-              });
+                  // Auto-scroll the chat window so the input (and message) are visible
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                  
+                });
               
               // Customer Support event (without immediately starting live chat):
               document.getElementById('menu-support').addEventListener('click', function() {
@@ -232,6 +198,12 @@ document.addEventListener('DOMContentLoaded', function () {
                       chatWindow.innerHTML = "";
                       initChatbotMenu();
                       supportChatActive = false; // Optional: disable support mode until chosen again
+                      
+                      var menuEl = document.getElementById('chatbot-menu');
+                        if (menuEl) {
+                        menuEl.remove();
+                        }
+
                   });
                   
                   // "Live Chat Now" button event: now actually start live chat
@@ -240,6 +212,13 @@ document.addEventListener('DOMContentLoaded', function () {
                       chatWindow.innerHTML = "";
                       showBotMessage("Connecting you to support... You are now in live chat mode.");
                       
+
+                         // Hide (or remove) the menu in support mode:
+                        var menuEl = document.getElementById('chatbot-menu');
+                        if (menuEl) {
+                        menuEl.remove();
+                        }
+
                       // Initiate the support session if not available
                       if (!supportChatSession) {
                           frappe.call({
@@ -261,6 +240,17 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           
   
+
+
+
+
+
+          
+
+
+
+
+          
             function loadSupportMessages() {
                 if (supportChatActive && supportChatSession) {
                     frappe.call({
@@ -351,6 +341,38 @@ document.addEventListener('DOMContentLoaded', function () {
     // ------------------------------------------------------------------
     // Helper Functions
     // ------------------------------------------------------------------
+
+
+// Add this function to your existing chatbot.js
+function getPersonalizedRecommendations() {
+    var user_id = frappe.session.user; // Assuming user is logged in
+    showTypingIndicator();
+    frappe.call({
+        method: 'ebot.api.get_personalized_recommendations',
+        args: { user_id: user_id },
+        callback: function(r) {
+            hideTypingIndicator();
+            if (r.message) {
+                showBotMessage(r.message);
+            } else {
+                showBotMessage("Sorry, I couldn't find any recommendations for you at the moment.");
+            }
+        },
+        error: function() {
+            hideTypingIndicator();
+            showBotMessage("Sorry, an error occurred while fetching recommendations.");
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
   
     function sendMessage() {
         var userInput = userInputField.value.trim();
@@ -480,96 +502,49 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
   
-        // === Default Chatbot Processing ===
-      //   showUserMessage(userInput);
-      //   userInputField.value = '';
-      //   chatWindow.scrollTop = chatWindow.scrollHeight;
-  
-      //   showTypingIndicator();
-      //   frappe.call({
-      //       method: 'ebot.api.get_bot_response',
-      //       args: { user_message: userInput },
-      //       callback: function(r) {
-      //           hideTypingIndicator();
-      //           if (r.message) {
-      //               showBotMessage(r.message);
-      //           }
-      //       },
-      //       error: function() {
-      //           hideTypingIndicator();
-      //           showBotMessage("Sorry, an error occurred.");
-      //       }
-      //   });
-      // === Default Chatbot Processing ===
-  // If an image was recently uploaded and analyzed, prepend its context
-  // if (image_context !== "") {
-  //     // Combine image context with the user's follow-up question
-  //     userInput = image_context + "\nFollow-up Question: " + userInput;
-  //     // Clear the image_context so it is used only once
-  //     image_context = "";
-  // }
-  
-  
-      // if (image_context !== "") {
-      //     userInput = "Image analysis: " + image_context + "\nFollow-up question: " + userInput;
-      //     // Then clear the stored analysis so it is used only once:
-      //     image_context = "";
-      //     }
-      // showUserMessage(userInput);
-      // userInputField.value = '';
-      // chatWindow.scrollTop = chatWindow.scrollHeight;
-  
-      // showTypingIndicator();
-      // frappe.call({
-      //     method: 'ebot.api.get_bot_response',
-      //     args: { user_message: userInput },
-      //     callback: function(r) {
-      //         hideTypingIndicator();
-      //         if (r.message) {
-      //             showBotMessage(r.message);
-      //         }
-      //     },
-      //     error: function() {
-      //         hideTypingIndicator();
-      //         showBotMessage("Sorry, an error occurred.");
-      //     }
-      // });
-      // === Default Chatbot Processing ===
-  // If an image was recently uploaded, use the stored analysis as the final answer
-  if (image_context !== "") {
-      // Option 1: If you want to completely ignore the follow-up text:
-      showUserMessage(userInput);  // show user's follow-up message
-      userInputField.value = '';
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      
-      // Then, output the stored analysis directly:
-      showBotMessage(image_context);
-      // Clear the stored image analysis so it isn’t reused:
-      image_context = "";
-      // Return early so that no further API call is made:
-      return;
+
+    if (userInput.toLowerCase().includes('recommend') || userInput.toLowerCase().includes('suggest')) {
+            showUserMessage(userInput);
+            userInputField.value = '';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            getPersonalizedRecommendations();
+            return;
+    }   
+    
+    if (image_context !== "") {
+        // Option 1: If you want to completely ignore the follow-up text:
+        showUserMessage(userInput);  // show user's follow-up message
+        userInputField.value = '';
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        
+        // Then, output the stored analysis directly:
+        showBotMessage(image_context);
+        // Clear the stored image analysis so it isn’t reused:
+        image_context = "";
+        // Return early so that no further API call is made:
+        return;
   }
   
-  // Otherwise, process normally:
-  showUserMessage(userInput);
-  userInputField.value = '';
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-  
-  showTypingIndicator();
-  frappe.call({
-      method: 'ebot.api.get_bot_response',
-      args: { user_message: userInput },
-      callback: function(r) {
-          hideTypingIndicator();
-          if (r.message) {
-              showBotMessage(r.message);
-          }
-      },
-      error: function() {
-          hideTypingIndicator();
-          showBotMessage("Sorry, an error occurred.");
-      }
-  });
+    // Otherwise, process normally:
+    showUserMessage(userInput);
+    userInputField.value = '';
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    
+    showTypingIndicator();
+    frappe.call({
+        method: 'ebot.api.get_bot_response',
+        args: { user_message: userInput },
+        callback: function(r) {
+            hideTypingIndicator();
+            if (r.message) {
+                showBotMessage(r.message);
+            }
+        },
+        error: function() {
+            hideTypingIndicator();
+            showBotMessage("Sorry, an error occurred.");
+        }
+    });
     }
   
   //   function sendImage(file) {
